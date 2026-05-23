@@ -10,15 +10,15 @@ Route::get('/health', [HealthController::class, 'index']);
 Route::prefix('tasks')->group(function () {
     Route::get('/', [TaskController::class, 'index']);
     Route::post('/', [TaskController::class, 'store']);
-    Route::get('/{task}', [TaskController::class, 'show']);
-    Route::put('/{task}', [TaskController::class, 'update']);
-    Route::delete('/{task}', [TaskController::class, 'destroy']);
+    Route::get('/{id}', [TaskController::class, 'show']);
+    Route::put('/{id}', [TaskController::class, 'update']);
+    Route::delete('/{id}', [TaskController::class, 'destroy']);
 });
 
 Route::prefix('subtasks')->group(function () {
     Route::get('/', [SubtaskController::class, 'index']);
     Route::post('/', [SubtaskController::class, 'store']);
-    Route::get('/{subtask}', [SubtaskController::class, 'show']);
-    Route::put('/{subtask}', [SubtaskController::class, 'update']);
-    Route::delete('/{subtask}', [SubtaskController::class, 'destroy']);
+    Route::get('/{id}', [SubtaskController::class, 'show']);
+    Route::put('/{id}', [SubtaskController::class, 'update']);
+    Route::delete('/{id}', [SubtaskController::class, 'destroy']);
 });

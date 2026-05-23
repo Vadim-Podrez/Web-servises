@@ -4,65 +4,101 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubtaskRequest;
-use App\Models\Subtask;
+use App\Services\SubtaskService;
 use Illuminate\Http\JsonResponse;
 
 class SubtaskController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        $subtasks = Subtask::with('task')
-            ->latest()
-            ->get();
+    public function __construct(
+        private readonly SubtaskService $subtaskService
+    ) {}
 
+    private function successResponse(
+        mixed $data = null,
+        string $message = '',
+        int $status = 200
+    ): JsonResponse {
         return response()->json([
             'success' => true,
-            'message' => 'Список підзавдань отримано',
-            'data' => $subtasks,
-        ]);
+            'message' => $message,
+            'data' => $data,
+        ], $status, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    private function errorResponse(
+        string $message,
+        int $status = 400
+    ): JsonResponse {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+        ], $status, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function index(): JsonResponse
+    {
+        $subtasks = $this->subtaskService->getAll();
+
+        return $this->successResponse(
+            $subtasks,
+            'Список підзавдань отримано'
+        );
     }
 
     public function store(SubtaskRequest $request): JsonResponse
     {
-        $subtask = Subtask::create($request->validated());
+        $subtask = $this->subtaskService->create($request->validated());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Підзавдання успішно додано до основного завдання',
-            'data' => $subtask,
-        ], 201);
+        return $this->successResponse(
+            $subtask,
+            'Підзавдання успішно додано до основного завдання',
+            201
+        );
     }
 
-    public function show(Subtask $subtask): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        $subtask->load('task');
+        $subtask = $this->subtaskService->find($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Підзавдання знайдено',
-            'data' => $subtask,
-        ]);
+        if (!$subtask) {
+            return $this->errorResponse('Підзавдання не знайдено', 404);
+        }
+
+        return $this->successResponse(
+            $subtask,
+            'Підзавдання знайдено'
+        );
     }
 
-    public function update(SubtaskRequest $request, Subtask $subtask): JsonResponse
+    public function update(SubtaskRequest $request, int $id): JsonResponse
     {
-        $subtask->update($request->validated());
+        $subtask = $this->subtaskService->find($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Підзавдання успішно оновлено',
-            'data' => $subtask->fresh('task'),
-        ]);
+        if (!$subtask) {
+            return $this->errorResponse('Підзавдання не знайдено', 404);
+        }
+
+        $subtask = $this->subtaskService->update($subtask, $request->validated());
+
+        return $this->successResponse(
+            $subtask,
+            'Підзавдання успішно оновлено'
+        );
     }
 
-    public function destroy(Subtask $subtask): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $subtask->delete();
+        $subtask = $this->subtaskService->find($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Підзавдання видалено',
-            'data' => null,
-        ]);
+        if (!$subtask) {
+            return $this->errorResponse('Підзавдання не знайдено', 404);
+        }
+
+        $this->subtaskService->delete($subtask);
+
+        return $this->successResponse(
+            null,
+            'Підзавдання видалено'
+        );
     }
 }
